@@ -16,7 +16,7 @@ using DelimitedFiles, Random, HypertextLiteral, LinearAlgebra
 # ╔═╡ 32eaa8c4-98bb-11ed-2164-9d8b1d53dec8
 md"""
 # Dithered Resonator Networks
-Our goal is to replace the floating-point values of the superposition weights a_f of the resonators of Frady, Kent et al. with bipolar values alternating between -1 and +1 over time (i.e. "dithered" so that their time average over several cycles is approximately equal to the floating point values.\
+Our goal is to replace the floating-point values of the superposition weights *a_f* of the resonators of Frady, Kent et al. with bipolar values alternating between -1 and +1 over time (i.e. "dithered") so that their time average over several cycles is approximately equal to the floating point values.\
 
 *dfd February 2023*
 """
@@ -1480,7 +1480,7 @@ version = "1.4.1+0"
 # ╠═e35c60ff-df6e-4124-b134-897e1aed85cf
 # ╠═0745eb59-d333-4137-a0bf-f2c15e260d0e
 # ╠═a42cc0e2-9ba2-4ed7-9b92-a252c555c125
-# ╟─32eaa8c4-98bb-11ed-2164-9d8b1d53dec8
+# ╠═32eaa8c4-98bb-11ed-2164-9d8b1d53dec8
 # ╟─8e8df26e-2692-4534-a5e0-f0141b6e187e
 # ╠═1c3202eb-1f26-46af-a9e3-225c26aec695
 # ╟─7d34d3fc-5485-4b72-983c-c10f368e6a8f

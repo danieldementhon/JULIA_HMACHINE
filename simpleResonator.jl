@@ -76,13 +76,15 @@ function setCodebooks(N, D, synapse_type)
 		bigX = rand((-1,1), (N, D[f])) # each NxD[f] array bigX is one codebook
 		# @show bigX
 		push!(bigXs, bigX)
-		push!(bigXXᵀs, bigX * bigX')
 		if synapse_type == "OLS"
 			bigX⁺= pinv(bigX)
 			push!(bigXX⁺s, bigX * bigX⁺)
+		else		
+			push!(bigXXᵀs, bigX * bigX')
 		end
 	end
-	return (bigXs, bigXXᵀs, bigXX⁺s)
+	bigXXinverses = synapse_type=="OLS" ? bigXX⁺s : bigXXᵀs
+	return (bigXs, bigXXinverses)
 end
 
 # ╔═╡ 781981c0-0bbc-4ffa-ad0a-3abb40e4c2b5
@@ -138,7 +140,7 @@ md"""
 """
 
 # ╔═╡ 217c7446-b1a5-4eb5-aba0-8a77697b7917
-function resonatorFactoring(composite, bigXs, bigXXᵀs, bigXX⁺s, N, D)
+function resonatorFactoring(composite, bigXs, bigXXInverses, N, D)
 #
 # Factorize input composite vector into its factors xs, one per codebook 
 # using a resonator network
@@ -166,11 +168,7 @@ function resonatorFactoring(composite, bigXs, bigXXᵀs, bigXX⁺s, N, D)
 			# remove record for label, then do product of values of all other records
 			o_f = prod(xs[:, 1:end .!= f], dims=2) # multiply all cols except f-col	
 			x_f_noisy = composite .* o_f # because vectors are self-inverse
-			if synapse_type == "OLS"
-				bigXfactor = bigXX⁺s[f]
-			else
-				bigXfactor = bigXXᵀs[f]
-			end
+			bigXfactor = bigXXInverses[f]
 			x_f = activation(bigXfactor * x_f_noisy)
 			
 			sim = ((x_f' * xs[:,f])[1])/N # similarity with previous vector estimate
@@ -213,17 +211,19 @@ function resonatorMain()
 # from each codebook is selected as part of the composite at each trial,
 # or we can at each trial generate whole new vectors and codebooks 
 # 	
-	# Random.seed!(1234) # set random generator seed for repeatable results
+	Random.seed!(1234) # set random generator seed for repeatable results
 	N = 2000 # number of neurons in each VSA vector; change to 10000
 #	D = [32, 35, 25, 20] # how many vectors D[f] in each X codebook
 	D = [3, 5, 5, 2] # how many vectors D[f] in each X codebook
 	F = length(D)  # F is number of codebooks in paper
 	maxiters = 200
-	synapse_type = "OLS" # "OLS" Ordinay Least Square ...
-#	synapse_type = "OP" # ... vs. "OP" for Outer Product
-
+	
+#	synapse_type = "OLS" # "OLS" Ordinay Least Square ...
+	synapse_type = "OP" # ... vs. "OP" for Outer Product
+	@show synapse_type
+	
 # We can either set codebooks here (faster) or in the loop (for more randomness):
-#	(bigXs, bigXXᵀs, bigXX⁺s) = setCodebooks(N, D, synapse_type)
+#	(bigXs, bigXXinverses) = setCodebooks(N, D, synapse_type)
 	
 	successrate = 0;
 	successlist = []
@@ -231,13 +231,13 @@ function resonatorMain()
 	numtrials = 100
 	
 	for trialidx = 1:numtrials
-		(bigXs, bigXXᵀs, bigXX⁺s) = setCodebooks(N, D, synapse_type)
+		(bigXs, bigXXinverses) = setCodebooks(N, D, synapse_type)
 		println(" ")
 		@show trialidx
 		# create random composite vector
 		(gtindices, composite) = generateCompositeQuery(bigXs, N, D)
 		# guess what the indices of the vector factors of composite are
-		guessindices = resonatorFactoring(composite, bigXs, bigXXᵀs, bigXX⁺s, N, D)
+		guessindices = resonatorFactoring(composite, bigXs, bigXXinverses, N, D)
 		ismatch = (guessindices == gtindices) # true if all gt and guess indices ok
 		push!(successlist, ismatch)
 

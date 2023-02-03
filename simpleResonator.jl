@@ -126,13 +126,11 @@ So all vectors of dimension N are mapped to the corners of a hypercube [+/-1, +/
 """
 
 # ╔═╡ 04b3a96a-d725-4a66-8040-acb16ef73d3e
-# Our activation is a function that clamps neuron values to {-1,1}:
-# Note that it randomly selects -1 or 1 if a vector component was zero
-begin
-	activation(x::Real) = x==0 ? rand((-1,1)) : sign(x) # bipolar sign 
-#	activation(x::Real) = x==0 ? -1 : sign(x) # deterministic bipolar sign 
-	activation(y::Array) = map(x::Real->activation(x), y) # bipolar sign for array
-end
+# Activation is a function that clamps neuron values to {-1,1}:
+# It randomly selects -1 or 1 if a value zero
+# To apply activation to a vector V we write activation.(V)
+
+activation(x) = x==0 ? rand((-1,1)) : sign(x) # bipolar sign 
 
 # ╔═╡ 19f16f8f-ce26-4065-b89b-a79a5ba19c25
 md"""
@@ -157,7 +155,7 @@ function resonatorFactoring(composite, bigXs, bigXXInverses, N, D)
 	
 	for f = 1:F
 		D[f] = size(bigXs[f],2) # number of vectors in each codebook
-		xs[:,f] = activation(bigXs[f] * ones(D[f],1)) # init xs with averages
+		xs[:,f] = activation.(bigXs[f] * ones(D[f],1)) # init xs with averages
 	end
 
 	icount = 0
@@ -169,7 +167,7 @@ function resonatorFactoring(composite, bigXs, bigXXInverses, N, D)
 			o_f = prod(xs[:, 1:end .!= f], dims=2) # multiply all cols except f-col	
 			x_f_noisy = composite .* o_f # because vectors are self-inverse
 			bigXfactor = bigXXInverses[f]
-			x_f = activation(bigXfactor * x_f_noisy)
+			x_f = activation.(bigXfactor * x_f_noisy)
 			
 			sim = ((x_f' * xs[:,f])[1])/N # similarity with previous vector estimate
 			@show sim
@@ -228,7 +226,7 @@ function resonatorMain()
 	successrate = 0;
 	successlist = []
 
-	numtrials = 100
+	numtrials = 10
 	
 	for trialidx = 1:numtrials
 		(bigXs, bigXXinverses) = setCodebooks(N, D, synapse_type)
